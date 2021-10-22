@@ -1,0 +1,5 @@
+name "deltalang"
+description "A minimalistic JS-like interpreter"
+authors "laszl"
+copyright "Copyright © 2021, laszl"
+license "BSL-1.0"
