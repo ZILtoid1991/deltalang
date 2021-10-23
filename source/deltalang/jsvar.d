@@ -432,13 +432,13 @@ private var _op(alias _this, alias this2, string op, T)(T t) if(op == "~") {
 // FIXME: maybe the bitops should be moved out to another function like ~ is
 private var _op(alias _this, alias this2, string op, T)(T t) if(op != "~") {
 	static if(is(T == var)) {
-		if(t.payloadType() == var.Type.Integral)
-			return _op!(_this, this2, op)(t._payload._integral);
-		if(t.payloadType() == var.Type.Floating)
-			return _op!(_this, this2, op)(t._payload._floating);
-		if(t.payloadType() == var.Type.String)
-			return _op!(_this, this2, op)(t._payload._string);
-		throw new Exception("Attempted invalid operator `" ~ op ~ "` on variable of type " ~ to!string(t.payloadType()));
+		switch (t.payloadType()) {
+			case var.Type.Integral: return _op!(_this, this2, op)(t._payload._integral);
+			case var.Type.Floating: return _op!(_this, this2, op)(t._payload._floating);
+			case var.Type.String: return _op!(_this, this2, op)(t._payload._string);
+			default: throw new IncompatibleOperatorException("Attempted invalid operator `" ~ op ~ "` on variable of type " ~ 
+				to!string(t.payloadType()));
+		}
 	} else {
 		if(this2.payloadType() == var.Type.Integral) {
 			auto l = this2._payload._integral;
@@ -1201,7 +1201,7 @@ struct var {
 		Object, Array, Integral, Floating, String, Function, Boolean
 	}
 
-	public Type payloadType() {
+	public Type payloadType() @nogc @safe pure nothrow const {
 		return _type;
 	}
 
@@ -1959,6 +1959,18 @@ class PropertyPrototype : PrototypeObject {
 	override JSONValue toJsonValue() {
 		return get.toJsonValue();
 	}
+}
+///Thrown if incompatible operations are being attempted
+class IncompatibleOperatorException : DSException {
+	@nogc @safe pure nothrow this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null)
+    {
+        super(msg, file, line, nextInChain);
+    }
+
+    @nogc @safe pure nothrow this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__)
+    {
+        super(msg, file, line, nextInChain);
+    }
 }
 ///Thrown if missing members are being referenced
 class MissingMemberException : DSException {
